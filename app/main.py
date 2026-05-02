@@ -3,13 +3,15 @@ import uvicorn
 
 from app.db.connections import engine
 from app.db.base import Base
-
+from app.users.routers import router as auth_router
 
 app = FastAPI(
     title="Auth",
     description="Authorization",
     version="1.0.0",
 )
+
+app.include_router(auth_router)
 
 
 @app.on_event("startup")

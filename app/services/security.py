@@ -7,6 +7,7 @@ from fastapi import HTTPException, status
 
 # from app.core.config import settings
 
+# Разбораться с типами в env
 # Контекст для хэширования паролей
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
@@ -23,7 +24,7 @@ def create_access_token(user_id: uuid.UUID) -> str:
     now = datetime.utcnow()
     payload = {
         "sub": str(user_id),
-        "exp": now + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES),
+        "exp": now + timedelta(minutes=int(ACCESS_TOKEN_EXPIRE_MINUTES)),
         "iat": now,
         "type": "access"
     }
@@ -34,7 +35,7 @@ def create_refresh_token(user_id: uuid.UUID) -> str:
     now = datetime.utcnow()
     payload = {
         "sub": str(user_id),
-        "exp": now + timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS),
+        "exp": now + timedelta(days=int(REFRESH_TOKEN_EXPIRE_DAYS)),
         "iat": now,
         "type": "refresh"
     }

@@ -18,6 +18,14 @@ class TokenResponse(BaseModel):
     token_type: str = "bearer"
 
 
+class RefreshRequest(BaseModel):
+    refresh_token: str
+
+
+class LogoutRequest(BaseModel):
+    refresh_token: str
+
+
 class UserResponse(BaseModel):
     id: uuid.UUID
     username: str
@@ -25,3 +33,7 @@ class UserResponse(BaseModel):
     is_verified: bool
 
     model_config = {"from_attributes": True}
+
+
+
+
