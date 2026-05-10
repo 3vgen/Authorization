@@ -14,7 +14,7 @@ class User(Base):
         UUID(as_uuid=True), primary_key=True, index=True, default=uuid.uuid4
     )
     username: Mapped[str] = mapped_column(
-        Text, nullable=False
+        Text, nullable=False, unique=True
     )
     hashed_password: Mapped[str] = mapped_column(
         String(255), nullable=False

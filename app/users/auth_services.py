@@ -2,6 +2,7 @@ from datetime import datetime, timedelta, timezone
 from fastapi import HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, delete
+from sqlalchemy.exc import IntegrityError
 from app.core.config import settings
 from app.users.models.model_user import User
 from app.users.models.model_refresh_token import RefreshToken
@@ -14,23 +15,18 @@ from app.services.security import (
 )
 
 
-# utc now – устарвший подход
-# хранить токен в виде хэша
-
 async def register(db: AsyncSession, data: RegisterRequest) -> User:
-    is_user = await db.execute(select(User).where(User.username == data.username))
-    if is_user.scalar_one_or_none():
-        raise HTTPException(status_code=409, detail="User already registered")
-
     new_user = User(
         username=data.username,
         hashed_password=hash_password(data.password)
     )
+    try:
+        db.add(new_user)
+        await db.commit()
 
-    db.add(new_user)
-    await db.commit()
-    await db.refresh(new_user)
-
+    except IntegrityError:
+        await db.rollback()
+        raise HTTPException(409, "User already registered")
     return new_user
 
 
@@ -82,11 +78,7 @@ async def refresh(db: AsyncSession, refresh_token: str) -> TokenResponse:
 
 
 async def logout(db: AsyncSession, refresh_token: str) -> None:
-    result = await db.execute(select(RefreshToken).where(RefreshToken.token == refresh_token))
-    db_token = result.scalar_one_or_none()
-
-    if not db_token:
-        raise HTTPException(status_code=401, detail="Token not found")
-
-    await db.delete(db_token)
+    await db.execute(
+        delete(RefreshToken).where(RefreshToken.token == refresh_token)
+    )
     await db.commit()
