@@ -2,10 +2,9 @@ import uuid
 from datetime import datetime, timedelta
 from jose import jwt, JWTError
 from passlib.context import CryptContext
-from app.core.config import ACCESS_TOKEN_EXPIRE_MINUTES, REFRESH_TOKEN_EXPIRE_DAYS, SECRET_KEY
+from app.core.config import settings
 from fastapi import HTTPException, status
 
-# from app.core.config import settings
 
 # Разбораться с типами в env
 # Контекст для хэширования паролей
@@ -24,22 +23,22 @@ def create_access_token(user_id: uuid.UUID) -> str:
     now = datetime.utcnow()
     payload = {
         "sub": str(user_id),
-        "exp": now + timedelta(minutes=int(ACCESS_TOKEN_EXPIRE_MINUTES)),
+        "exp": now + timedelta(minutes=int(settings.ACCESS_TOKEN_EXPIRE_MINUTES)),
         "iat": now,
         "type": "access"
     }
-    return jwt.encode(payload, SECRET_KEY, algorithm="HS256")
+    return jwt.encode(payload, settings.SECRET_KEY, algorithm="HS256")
 
 
 def create_refresh_token(user_id: uuid.UUID) -> str:
     now = datetime.utcnow()
     payload = {
         "sub": str(user_id),
-        "exp": now + timedelta(days=int(REFRESH_TOKEN_EXPIRE_DAYS)),
+        "exp": now + timedelta(days=int(settings.REFRESH_TOKEN_EXPIRE_DAYS)),
         "iat": now,
         "type": "refresh"
     }
-    return jwt.encode(payload, SECRET_KEY, algorithm="HS256")
+    return jwt.encode(payload, settings.SECRET_KEY, algorithm="HS256")
 
 
 def decode_access_token(token: str) -> uuid.UUID:
@@ -52,7 +51,7 @@ def decode_access_token(token: str) -> uuid.UUID:
     try:
         payload = jwt.decode(
             token,
-            SECRET_KEY,
+            settings.SECRET_KEY,
             algorithms=["HS256"]
         )
 

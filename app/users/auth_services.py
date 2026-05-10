@@ -2,7 +2,7 @@ from datetime import datetime, timedelta
 from fastapi import HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, delete
-from app.core.config import REFRESH_TOKEN_EXPIRE_DAYS
+from app.core.config import settings
 from app.users.models.model_user import User
 from app.users.models.model_refresh_token import RefreshToken
 from app.users.schemas import RegisterRequest, LoginRequest, UserResponse, TokenResponse
@@ -47,7 +47,7 @@ async def login(db: AsyncSession, data: LoginRequest) -> TokenResponse:
     db_token = RefreshToken(
         user_id=user.id,
         token=refresh_token,
-        expires_at=datetime.utcnow() + timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS)
+        expires_at=datetime.utcnow() + timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS)
     )
 
     db.add(db_token)
@@ -73,7 +73,7 @@ async def refresh(db: AsyncSession, refresh_token: str) -> TokenResponse:
     new_db_token = RefreshToken(
         user_id=db_token.user_id,
         token=new_refresh_token,
-        expires_at=datetime.utcnow() + timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS)
+        expires_at=datetime.utcnow() + timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS)
     )
 
     db.add(new_db_token)
