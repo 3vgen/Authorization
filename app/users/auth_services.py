@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from fastapi import HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, delete
@@ -47,12 +47,12 @@ async def login(db: AsyncSession, data: LoginRequest) -> TokenResponse:
     db_token = RefreshToken(
         user_id=user.id,
         token=refresh_token,
-        expires_at=datetime.utcnow() + timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS)
+        expires_at=datetime.now(timezone.utc) + timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS)
     )
 
     db.add(db_token)
 
-    user.last_login_at = datetime.utcnow()
+    user.last_login_at = datetime.now(timezone.utc)
     await db.commit()
 
     return TokenResponse(access_token=access_token, refresh_token=refresh_token)
@@ -62,7 +62,7 @@ async def refresh(db: AsyncSession, refresh_token: str) -> TokenResponse:
     result = await db.execute(select(RefreshToken).where(RefreshToken.token == refresh_token))
     db_token: RefreshToken | None = result.scalar_one_or_none()
 
-    if not db_token or db_token.expires_at < datetime.utcnow():
+    if not db_token or db_token.expires_at < datetime.now(timezone.utc):
         raise HTTPException(status_code=401, detail="Token revoked or expired")
 
     await db.delete(db_token)
@@ -73,7 +73,7 @@ async def refresh(db: AsyncSession, refresh_token: str) -> TokenResponse:
     new_db_token = RefreshToken(
         user_id=db_token.user_id,
         token=new_refresh_token,
-        expires_at=datetime.utcnow() + timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS)
+        expires_at=datetime.now(timezone.utc) + timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS)
     )
 
     db.add(new_db_token)

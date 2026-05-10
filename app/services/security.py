@@ -1,5 +1,5 @@
 import uuid
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from jose import jwt, JWTError
 from passlib.context import CryptContext
 from app.core.config import settings
@@ -20,7 +20,7 @@ def verify_password(password: str, hashed_password: str) -> bool:
 
 
 def create_access_token(user_id: uuid.UUID) -> str:
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc)
     payload = {
         "sub": str(user_id),
         "exp": now + timedelta(minutes=int(settings.ACCESS_TOKEN_EXPIRE_MINUTES)),
@@ -31,7 +31,7 @@ def create_access_token(user_id: uuid.UUID) -> str:
 
 
 def create_refresh_token(user_id: uuid.UUID) -> str:
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc)
     payload = {
         "sub": str(user_id),
         "exp": now + timedelta(days=int(settings.REFRESH_TOKEN_EXPIRE_DAYS)),
