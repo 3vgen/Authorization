@@ -40,16 +40,21 @@ async def login(db: AsyncSession, data: LoginRequest) -> TokenResponse:
     access_token = create_access_token(user.id)
     refresh_token = create_refresh_token(user.id)
 
-    db_token = RefreshToken(
-        user_id=user.id,
-        token=refresh_token,
-        expires_at=datetime.now(timezone.utc) + timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS)
-    )
+    try:
+        db_token = RefreshToken(
+            user_id=user.id,
+            token=refresh_token,
+            expires_at=datetime.now(timezone.utc) + timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS)
+        )
 
-    db.add(db_token)
+        db.add(db_token)
 
-    user.last_login_at = datetime.now(timezone.utc)
-    await db.commit()
+        user.last_login_at = datetime.now(timezone.utc)
+        await db.commit()
+
+    except:
+        await db.rollback()
+        raise
 
     return TokenResponse(access_token=access_token, refresh_token=refresh_token)
 
