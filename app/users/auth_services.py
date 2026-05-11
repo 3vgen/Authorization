@@ -52,7 +52,7 @@ async def login(db: AsyncSession, data: LoginRequest) -> TokenResponse:
         user.last_login_at = datetime.now(timezone.utc)
         await db.commit()
 
-    except:
+    except Exception:
         await db.rollback()
         raise
 
